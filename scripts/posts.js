@@ -2,45 +2,52 @@ if (!localStorage.getItem("token")) {
   window.location.href = "login.html";
 }
 
-function logout() {
+document.getElementById("logout").addEventListener("click", () => {
   localStorage.removeItem("token");
+  localStorage.removeItem("user");
   window.location.href = "login.html";
-}
+});
+
+const postsContainer = document.getElementById("posts-container");
+const searchInput = document.getElementById("search");
+const modal = document.getElementById("modal");
+const modalTitle = document.getElementById("modal-title");
+const modalBody = document.getElementById("modal-body");
+const closeModal = document.getElementById("close-modal");
 
 let posts = [];
 
+async function fetchPosts() {
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts");
+  posts = await res.json();
+  renderPosts(posts);
+}
+
 function renderPosts(postList) {
-  const container = document.getElementById("post-list");
-  container.innerHTML = "";
+  postsContainer.innerHTML = "";
   postList.forEach(post => {
     const card = document.createElement("div");
-    card.className = "card";
-    card.innerText = post.title;
-    card.onclick = () => openModal(post);
-    container.appendChild(card);
+    card.className = "post-card";
+    card.textContent = post.title;
+    card.addEventListener("click", () => showPostDetails(post));
+    postsContainer.appendChild(card);
   });
 }
 
-function openModal(post) {
-  document.getElementById("modal-title").innerText = post.title;
-  document.getElementById("modal-body").innerText = post.body;
-  document.getElementById("post-modal").classList.remove("hidden");
+function showPostDetails(post) {
+  modalTitle.textContent = post.title;
+  modalBody.textContent = post.body;
+  modal.classList.remove("hidden");
 }
 
-function closeModal() {
-  document.getElementById("post-modal").classList.add("hidden");
-}
+closeModal.addEventListener("click", () => {
+  modal.classList.add("hidden");
+});
 
-fetch("https://jsonplaceholder.typicode.com/posts")
-  .then(res => res.json())
-  .then(data => {
-    posts = data;
-    renderPosts(posts);
-  });
-
-document.getElementById("search").addEventListener("input", (e) => {
-  const filtered = posts.filter(p =>
-    p.title.toLowerCase().includes(e.target.value.toLowerCase())
-  );
+searchInput.addEventListener("input", () => {
+  const query = searchInput.value.toLowerCase();
+  const filtered = posts.filter(p => p.title.toLowerCase().includes(query));
   renderPosts(filtered);
 });
+
+fetchPosts();
